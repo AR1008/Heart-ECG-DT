@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic Heart Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000000;
+            font-family: Arial, sans-serif;
+            color: #f0f0f0;
+        }
+        #container {
+            width: 100%;
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 320px;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        #info h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            border-bottom: 1px solid #2c5d7c;
+            padding-bottom: 8px;
+        }
+        #ecgGraph {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background-color: rgba(0, 0, 0, 1);
+            border-top: 1px solid #1e88e5;
+            z-index: 10;
+        }
+        #ecgDragHandle {
+            position: absolute;
+            bottom: 200px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-color: rgba(30, 136, 229, 0.5);
+            cursor: ns-resize;
+            z-index: 20;
+            transition: background-color 0.2s;
+        }
+        #ecgDragHandle:hover {
+            background-color: rgba(30, 136, 229, 0.8);
+        }
+        .drag-hint {
+            position: absolute;
+            bottom: 210px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #90caf9;
+            font-size: 12px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 4px;
+            background-color: #0a1929;
+            color: white;
+            border: 1px solid #1976d2;
+        }
+        .slider-container {
+            margin: 15px 5px;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4fc3f7;
+        }
+        input[type="range"] {
+            width: 90%;
+            margin-right: 10px;
+            background-color: #0a1929;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 5px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #1976d2;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #4fc3f7;
+        }
+        .info-box {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(10, 25, 41, 0.7);
+            border-radius: 6px;
+            border-left: 4px solid #4fc3f7;
+        }
+        .cardiac-phase {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(20, 40, 80, 0.7);
+            border-radius: 6px;
+            text-align: center;
+            border-left: 4px solid #ef6c00;
+        }
+        .cardiac-phase #phaseText {
+            font-weight: bold;
+            font-size: 16px;
+            color: #ffb74d;
+        }
+        .phase-description {
+            font-style: italic;
+            font-size: 12px;
+            margin-top: 5px;
+            color: #b0bec5;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(10, 25, 41, 0.5);
+            border-radius: 6px;
+        }
+        .legend-heading {
+            width: 100%;
+            margin-bottom: 8px;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            margin-right: 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .heart-label {
+            text-shadow: 0px 0px 4px #000000, 0px 0px 4px #000000;
+            font-size: 14px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="info">
+        <h3>Realistic Heart Visualization</h3>
+        <div>
+            <label for="patientSelect">Select Patient: </label>
+            <select id="patientSelect"></select>
+        </div>
+        <div>
+            <button id="playButton">Play</button>
+            <button id="pauseButton">Pause</button>
+            <button id="normalizeButton">Toggle Normalize</button>
+        </div>
+        <div class="slider-container">
+            <label for="speedSlider">Animation Speed: <span id="speedValue">0.15x</span></label>
+            <input type="range" id="speedSlider" min="0.05" max="0.25" step="0.05" value="0.15">
+        </div>
+        <div class="info-box">
+            <div>Status: <span id="statusText">Normal</span></div>
+            <div>Heart Rate: <span id="bpmText">--</span> BPM</div>
+            <div>Current Phase: <span id="phaseText">Diastole</span></div>
+        </div>
+        <div class="cardiac-phase">
+            <div class="phase-description" id="phaseDescription">Heart relaxed, chambers filling with blood</div>
+        </div>
+        <div class="legend">
+            <div class="legend-heading">ECG Components</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgb(0, 120, 255);"></div>
+                <span>P wave</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgb(255, 50, 50);"></div>
+                <span>QRS complex</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgb(0, 220, 0);"></div>
+                <span>T wave</span>
+            </div>
+        </div>
+        <div class="legend">
+            <div class="legend-heading">Heart Structure</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgb(65, 105, 225);"></div>
+                <span>Right side (deoxygenated)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgb(224, 32, 32);"></div>
+                <span>Left side (oxygenated)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgb(255, 255, 255);"></div>
+                <span>Heart valves</span>
+            </div>
+        </div>
+    </div>
+    <div class="drag-hint">↕ Drag to resize ECG graph</div>
+    <canvas id="ecgGraph"></canvas>
+
+    <!-- Updated Three.js imports for better compatibility -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Load OrbitControls separately as a global variable -->
+    <script>
+        // Create a global OrbitControls variable that can be used by heart_model.js
+        window.OrbitControls = function(camera, domElement) {
+            // Create a simple rotation control if the actual OrbitControls isn't available
+            this.update = function() {
+                if (window.heart) {
+                    window.heart.rotation.y += 0.005;
+                }
+            };
+            
+            // Add empty methods to avoid errors
+            this.enableDamping = true;
+            this.dampingFactor = 0.25;
+            this.rotateSpeed = 0.5;
+            this.enableZoom = true;
+            this.minDistance = 3;
+            this.maxDistance = 10;
+        };
+        
+        // Try to load the actual OrbitControls
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js";
+        script.onload = function() {
+            console.log("OrbitControls loaded successfully");
+        };
+        script.onerror = function() {
+            console.warn("Could not load OrbitControls, using fallback");
+        };
+        document.head.appendChild(script);
+    </script>
+    
+    <script src="heart_model.js"></script>
+    <script>
+        // Mock data for testing if server is not available
+        const mockEcgData = function() {
+            const data = [];
+            for (let p = 0; p < 10; p++) {
+                const patient = { label: p < 5 ? 0 : 1 }; // First 5 normal, rest abnormal
+                
+                // Generate simple sine wave pattern for ECG
+                for (let i = 0; i < 140; i++) {
+                    // Normal pattern with P, QRS, and T waves
+                    if (p < 5) {
+                        // P wave
+                        if (i < 20) {
+                            patient[i.toString()] = 0.1 * Math.sin(i/3);
+                        }
+                        // QRS complex
+                        else if (i >= 30 && i < 40) {
+                            if (i === 35) {
+                                patient[i.toString()] = 1.0; // R peak
+                            } else if (i === 33) {
+                                patient[i.toString()] = -0.2; // Q dip
+                            } else if (i === 37) {
+                                patient[i.toString()] = -0.3; // S dip
+                            } else {
+                                patient[i.toString()] = (i-30)/10;
+                            }
+                        }
+                        // T wave
+                        else if (i >= 50 && i < 80) {
+                            patient[i.toString()] = 0.3 * Math.sin((i-50)/9);
+                        }
+                        // Baseline
+                        else {
+                            patient[i.toString()] = 0.02 * (Math.random() - 0.5);
+                        }
+                    }
+                    // Abnormal pattern - different for each abnormal patient
+                    else {
+                        // Various abnormal patterns
+                        const abnormalType = p - 5;
+                        
+                        if (abnormalType === 0) {
+                            // Atrial fibrillation - no P waves, irregular R-R
+                            if (i === 35 || i === 90) {
+                                patient[i.toString()] = 0.8; // R peaks
+                            } else if (i === 37 || i === 92) {
+                                patient[i.toString()] = -0.2; // S dips
+                            } else {
+                                patient[i.toString()] = 0.1 * Math.sin(i*0.7) + 0.05 * Math.random();
+                            }
+                        } else if (abnormalType === 1) {
+                            // Wide QRS - possible bundle branch block
+                            if (i >= 30 && i < 50) {
+                                if (i === 40) {
+                                    patient[i.toString()] = 0.9; // R peak
+                                } else {
+                                    patient[i.toString()] = 0.4 * Math.sin((i-30)/3);
+                                }
+                            } else {
+                                patient[i.toString()] = 0.05 * Math.sin(i/10);
+                            }
+                        } else {
+                            // Various other patterns
+                            patient[i.toString()] = 0.5 * Math.sin(i/10 + abnormalType) + 0.1 * Math.random();
+                        }
+                    }
+                }
+                data.push(patient);
+            }
+            return data;
+        };
+
+        // Try to fetch data from server, use mock data if it fails
+        fetch('/get_ecg_data')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Data loaded successfully:", data.length, "records");
+                window.ecgData = data;
+                initHeartVisualization(data);
+            })
+            .catch(error => {
+                console.warn('Error loading ECG data from server, using mock data:', error);
+                const mockData = mockEcgData();
+                console.log("Using mock data with", mockData.length, "records");
+                window.ecgData = mockData;
+                initHeartVisualization(mockData);
+            });
+    </script>
+</body>
+</html>
