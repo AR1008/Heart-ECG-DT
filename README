@@ -1,0 +1,119 @@
+Cardiac Cycle Visualization
+
+Overview
+Cardiac Cycle Visualization is an interactive web application that synchronizes a 3D beating heart model with real-time ECG patterns. It offers an engaging, educational tool for exploring the relationship between electrical (ECG) and mechanical cardiac functions.
+Features
+📍 Anatomically accurate 3D heart model with separate chambers, valves, and major vessels
+📈 Dynamic ECG visualization with color-coded P, QRS, and T waves
+🔄 Cardiac phase synchronization, showing each stage of the cycle
+💧 Animated blood flow responsive to cardiac phases
+🔓 Realistic valve animations opening and closing with heart phases
+🔧 Adjustable ECG graph size for better viewing
+🖱️ Interactive rotation controls for heart exploration
+🧑‍⚕️ Patient data simulation, including normal and abnormal ECG patterns
+⏩ Adjustable playback speed and data normalization options
+Technical Components
+1. 3D Heart Visualization (heart_model.js)
+Built with Three.js
+Realistic modeling of heart structures
+Animated synchronization with ECG phases
+Particle-based blood flow simulation
+2. ECG Graph Display
+Canvas-based, real-time ECG rendering
+Color-coded P, QRS, T wave visualization
+Resizable and interactive
+Custom wave detection algorithm for phase tracking
+3. Backend Server (server.py)
+Lightweight Flask server
+Serves real or generated ECG datasets
+Generates anatomically consistent sample data when no dataset is provided
+4. User Interface (index.html)
+Intuitive controls: playback, speed, normalization, patient selection
+Clear cardiac phase indicators and heart rate display
+Color-coded legends for easy understanding
+Setup & Installation
+Prerequisites
+Python 3.6+
+Modern web browser with WebGL support
+Python packages: flask, pandas, numpy
+Installation
+# Clone the repository
+git clone https://github.com/yourusername/cardiac-visualization.git
+cd cardiac-visualization
+
+# Install dependencies
+pip install flask pandas numpy
+
+# (Optional) Add your ECG dataset as `ecg.csv` in the project root
+# Start the server
+python server.py
+Open your browser and visit:
+http://localhost:5000
+Usage Guide
+Basic Controls
+▶️ / ⏸️ Play/Pause: Start or stop the animation
+🔄 Patient Selector: Switch between different ECG patterns
+📏 Normalize: Toggle ECG data normalization
+🐢🐇 Speed Slider: Adjust animation playback speed
+🖱️ Mouse Drag: Rotate the heart model
+↕️ ECG Resize: Drag the blue bar to adjust ECG graph size
+Understanding the Display
+🔵 Status: Shows if ECG is normal or abnormal
+❤️ Heart Rate: Displays beats per minute
+🔍 Current Phase: Name of the active cardiac phase
+📖 Phase Description: Brief explanation of ongoing events
+Cardiac Phases Explained
+Diastole: Heart relaxes, filling with blood
+Atrial Systole: Atria contract, pushing blood into ventricles (P wave)
+Ventricular Systole: Ventricles contract, pumping blood (QRS complex)
+Ventricular Repolarization: Ventricles relax and prepare for filling again (T wave)
+ECG Components
+🔵 P wave: Atrial depolarization
+🔴 QRS complex: Ventricular depolarization
+🟢 T wave: Ventricular repolarization
+Customization
+Using Your Own ECG Data
+Format:
+140 columns (0-139) of ECG values
+1 column label where 0 = normal and 1 = abnormal
+Place the file as ecg.csv in the root directory.
+Visual Customizations
+UI Styles: Modify CSS inside index.html
+3D Rendering: Adjust parameters in heart_model.js
+ECG Rendering: Tweak inside updateSingleEcgWave() function
+Technical Details
+3D Heart Construction
+Chambers: Customized sphere geometries
+Valves: Correct number of leaflets (Tricuspid: 3, Mitral: 2, Aortic/Pulmonary: 3 each)
+Blood Vessels: Catmull-Rom splines for natural paths
+Materials: Realistic colors and translucency settings
+ECG Detection Algorithm
+P wave: Detected using amplitude and timing thresholds
+QRS Complex: Focus on R-peak identification
+T wave: Position-sensitive detection post-QRS
+Animation Logic
+Atrial systole (P wave): Atria contract, AV valves open
+Ventricular systole (QRS): Ventricles contract, AV valves close, semilunar valves open
+Ventricular repolarization (T wave): Ventricles relax, semilunar valves close
+Diastole: Chambers refill
+Troubleshooting
+
+Issue	Solution
+Black screen	Ensure browser supports WebGL; update browser if needed
+Server won't start	Confirm Flask, Pandas, Numpy are installed
+Laggy performance	Minimize window size or close heavy applications
+ECG not displaying	Check ECG canvas initialization
+Performance Tips
+Recommended browsers: Chrome or Firefox
+Close background applications for smoother performance
+Lower playback speed if animations stutter
+License
+This project is licensed under the MIT License.
+Credits
+Three.js for 3D rendering
+Flask for the backend server
+Contributing
+We welcome contributions!
+Feel free to fork the project and submit a Pull Request.
+Disclaimer
+This tool is intended for educational purposes only and should not be used for medical diagnosis or clinical applications.
